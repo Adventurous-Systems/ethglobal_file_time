@@ -157,3 +157,45 @@ contract TimeTrace is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply/*, Reentr
     
 }
 
+/* 
+Project ERC1155 Contract
+
+enum Phases:
+- procured
+- delivered
+- installed
+- validated
+- paymentReceived
+- maintained (additional)
+
+uint numElementStructs;
+mapping (uint => ElementStruct) elementStructMapping;
+
+struct ElementStruct {
+  uint guid 
+  address stakeholder 
+  Phases currentPhase
+  mapping(Phases => mapping(uint => string) pictureUriOfIssue //also timestamp
+  // custom data
+  bool paymentReceived
+}
+
+function MintBatch (as the project creator)
+- to (stakeholder with verified token) stakeholder is the person/ team/ company that takes reponsibility for specific task/ elemet installation
+- ids[] (guid id's) 
+- amounts[] total of each guid item
+- bytes 
+
+function tokenElementProcured(id/guid) onlyStakeholder
+procured = no, yes, partly
+
+function tokenElementDelivered(id/guid) onlyStakeholder
+delivered = no, yes, partly
+
+function tokenElementInstalled(id/guid) onlyStakeholder
+installed = no, yes, partly
+
+function tokenElementValidated(id/guid) onlyStakeholder
+validated = no, yes, partly
+
+*/
