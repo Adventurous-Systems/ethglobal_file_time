@@ -25,9 +25,9 @@ contract TimeTrace is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply/*, Reentr
     mapping(address => uint) public amountOfTokensOwned;
 
 ////// TOKEN VERIFIERS MAPPINGS
-    // token id => verfiers array
+    // token id => verifiers array
     mapping(uint => address[]) public tokenVerifiers;
-    // token id => addresses that have verified the token
+    // token id => addresses that have verified the token 
     mapping(uint => address[]) public addressThatVerifiedToken;
     //
     mapping(address => mapping(uint => bool)) public isVerified;
@@ -36,8 +36,24 @@ contract TimeTrace is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply/*, Reentr
     //
     mapping(address => mapping(uint => uint)) public verifiedTokenTimestamp;
 
-    bool isTransferrable = false;
+    bool isTransferrable = false; //@dev do we not need a function to turn it into a transferable?
+    /*
+     Reasons for a TokenCreator to transfer a token:
+     - Wallet/account with Token is jeopardised/lost and need to retrieve token. (verifiers + admin to decide if it is legit, then token is transferred from lost wallet/account to new wallet/account)
+     - Perhaps handing over token ownership rights (from creator to client as the digital copy, for instance)
 
+     Reasons for a TokenVerifier/Stakeholder to transfer a token:
+     - Wallet/account with Token is jeopardised/lost and need to retrieve token. (creator + verifiers + admin to decide if it is legit, then token is transferred from lost wallet/account to new wallet/account)
+
+    */
+
+//@dev which roles should we have if we move towards a role based function?
+/*
+  - Contract Admin (Admin functionality to support specific 'savior' actions)
+  - Token Creator (Project initiator)
+  - Token Verifier (Project stakeholder)
+  - Project Viewer (insurance, authorities )
+*/
     constructor(address initialOwner) ERC1155("ipfs://") Ownable(initialOwner) {}
 
     function setURI(string memory newuri) public onlyOwner {
@@ -64,10 +80,10 @@ contract TimeTrace is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply/*, Reentr
 
     function addVerifiers(uint id, address[] memory _tokenVerifiers ) public /*onlyTokenCreator*/ {
         require(tokenCreator[id] == msg.sender, "Must be token creator to add verifiers"); 
-        require(tokenVerifiers[id].length < 11, "can't have more than 10 verifiers");
+        require(tokenVerifiers[id].length < 11, "can't have more than 10 verifiers"); // could we break the verifiers function unto a separate contract later? Definitely. 
 
         for (uint256 i = 0; i < _tokenVerifiers.length; i++) {
-            require(isTokenVerifier[_tokenVerifiers[i]][id], "Is already a verifier");
+            require(!isTokenVerifier[_tokenVerifiers[i]][id], "Is already a verifier");
             //require verifier not to be in the same slot if added a second or third round of verifiers. 
 
             tokenVerifiers[id].push(_tokenVerifiers[i]);
@@ -81,9 +97,15 @@ contract TimeTrace is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply/*, Reentr
         // emit verifiers addresses
 
         // potential to add timelock so that verifiers need to verify within a timeframe
+        // is there another constraint that we need to add for verifiers apart from timeframe? Need to put more thought into this.
     }
 
 //should be able to overwrite verifiers or remove
+    /*
+    function modifyVerifiers(uint id, address tokenVerifier) public onlyTokenCreator {
+      //replace verifier slot 
+    } 
+    */
 
     function verifyToken(uint id /*, uint placementInArray*/) public {
         // require(msg.sender == tokenVerifiers[id][placementInArray], "Must be on verifiers list to be able to verify");
@@ -150,9 +172,10 @@ contract TimeTrace is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply/*, Reentr
     }
 
 // function to create project smart contract ERC1155 (and stake token)
-// project creator mus be token creator
+// project creator must be token creator
 // verifiers are now stakeholders which receive their own escrow smart contract wallet
-// use cid to get json data of each element
+    // verifiers could just be passed unto the escrow smart contract for them to have a stake. lets look at the escrow SC
+// use cid to get json data of each element - we can coordinate so that this uses graphs as well.
 // batch mint initial element portions for each stake holder where they receive either NFT or ERC20 token depending on element, each with own cid
     
 }
@@ -160,13 +183,17 @@ contract TimeTrace is ERC1155, Ownable, ERC1155Burnable, ERC1155Supply/*, Reentr
 /* 
 Project ERC1155 Contract
 
+// Need to start thinking about user journeys.
+
 enum Phases:
-- procured
-- delivered
-- installed
-- validated
+- procured (material/ service order made)
+- paid (payment done for material [service] order)
+- delivered (material [service] order delivered to destination)
+- installed (material/ service installation done)
+- validated (material/ service QA validated by oracle)
 - paymentReceived
-- maintained (additional)
+// - maintained (additional) -then the contracts changes state to operations, or we sunset the project management and swithc to another contract.
+
 
 uint numElementStructs;
 mapping (uint => ElementStruct) elementStructMapping;
